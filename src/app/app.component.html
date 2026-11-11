@@ -1,0 +1,494 @@
+
+<div class="app-shell">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">{{ '{' }} {{ '}' }}</div>
+      <div>
+        <div class="brand-name">JSON <span>DIFF</span> ANALYZER</div>
+        <div class="brand-sub">PRO WORKSPACE <i></i> LOCAL PROCESSING</div>
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <span class="secure-label">
+        <span class="secure-dot"></span>
+        Files stay in your browser
+      </span>
+      <button class="btn btn-ghost" (click)="reset()">
+        <span>↺</span> Reset
+      </button>
+    </div>
+  </header>
+
+  <main class="workspace">
+
+    <section class="hero-row">
+      <div>
+        <div class="eyebrow">DEVELOPER TOOLKIT / FILE INSPECTION</div>
+        <h1>Compare. Detect. <span>Understand.</span></h1>
+        <p>Go beyond highlighting. See exactly what changed, where it changed, and what it means.</p>
+      </div>
+      <div class="version-chip">JSON ENGINE <b>v1.0</b></div>
+    </section>
+
+    <!-- FILE UPLOAD SECTION -->
+    <section class="upload-grid">
+
+      <!-- ORIGINAL FILE -->
+      <article class="file-card original-card">
+
+        <div class="card-heading">
+          <div class="file-icon">{{ '{' }} {{ '}' }}</div>
+
+          <div class="file-heading-text">
+            <h2>Original / ROT File</h2>
+            <p>BASELINE · SOURCE VERSION</p>
+          </div>
+
+          <span class="file-state">FILE A</span>
+        </div>
+
+        <div class="editor-toolbar">
+          <label class="file-name">
+            <span class="file-dot"></span>
+            {{ originalName }}
+          </label>
+
+          <div class="editor-actions">
+            <button (click)="format('original')" title="Format JSON">
+              Format
+            </button>
+
+            <button (click)="downloadText('original')" title="Download original">
+              ↓
+            </button>
+
+            <label class="upload-btn">
+              Upload file
+              <input
+                type="file"
+                accept=".json,.rot,.txt,application/json,text/plain"
+                (change)="onFile($event, 'original')">
+            </label>
+          </div>
+        </div>
+
+        <textarea
+          spellcheck="false"
+          autocapitalize="off"
+          autocomplete="off"
+          aria-label="Original JSON content"
+          [(ngModel)]="originalText"
+          placeholder="Paste original JSON here...">
+        </textarea>
+
+        <div class="editor-footer">
+          <span>JSON / TEXT INPUT</span>
+          <span>
+            {{ originalLineCount }} lines ·
+            {{ originalText.length }} chars
+          </span>
+        </div>
+
+      </article>
+
+      <!-- UPDATED FILE -->
+      <article class="file-card updated-card">
+
+        <div class="card-heading">
+          <div class="file-icon updated-icon">
+            {{ '{' }} {{ '}' }}
+          </div>
+
+          <div class="file-heading-text">
+            <h2>Updated / Compare File</h2>
+            <p>NEW VERSION · TARGET FILE</p>
+          </div>
+
+          <span class="file-state updated-state">FILE B</span>
+        </div>
+
+        <div class="editor-toolbar">
+          <label class="file-name">
+            <span class="file-dot updated-dot"></span>
+            {{ compareName }}
+          </label>
+
+          <div class="editor-actions">
+            <button (click)="format('compare')" title="Format JSON">
+              Format
+            </button>
+
+            <button (click)="downloadText('compare')" title="Download updated">
+              ↓
+            </button>
+
+            <label class="upload-btn">
+              Upload file
+              <input
+                type="file"
+                accept=".json,.rot,.txt,application/json,text/plain"
+                (change)="onFile($event, 'compare')">
+            </label>
+          </div>
+        </div>
+
+        <textarea
+          spellcheck="false"
+          autocapitalize="off"
+          autocomplete="off"
+          aria-label="Updated JSON content"
+          [(ngModel)]="compareText"
+          placeholder="Paste updated JSON here...">
+        </textarea>
+
+        <div class="editor-footer">
+          <span>JSON / TEXT INPUT</span>
+          <span>
+            {{ compareLineCount }} lines ·
+            {{ compareText.length }} chars
+          </span>
+        </div>
+
+      </article>
+
+    </section>
+
+    <!-- COMPARE ACTION -->
+    <div class="compare-action-row">
+
+      <div class="compare-hint">
+        <span class="hint-icon">⌘</span>
+        Compare both files to generate a detailed change analysis.
+
+        <label class="option-toggle">
+          <input
+            type="checkbox"
+            [(ngModel)]="ignoreWhitespace">
+          Ignore whitespace-only line changes
+        </label>
+      </div>
+
+      <button class="btn btn-primary" (click)="compare()">
+        <span>⇄</span>
+        Compare Files
+        <b>→</b>
+      </button>
+
+    </div>
+
+    <!-- ERROR -->
+    <div class="error-banner" *ngIf="error">
+      <b>JSON validation error</b>
+      <span>{{ error }}</span>
+    </div>
+
+    <!-- COMPARISON RESULTS -->
+    <section class="results" *ngIf="compared">
+
+      <div class="results-heading">
+        <div>
+          <div class="eyebrow">ANALYSIS COMPLETE</div>
+          <h2>Comparison results</h2>
+          <p>Structured differences and line-level changes between your files.</p>
+        </div>
+
+        <div class="export-actions">
+          <button class="btn btn-export" (click)="downloadCsv()">
+            ↓ Export CSV
+          </button>
+
+          <button class="btn btn-export" (click)="downloadReport()">
+            ↓ Export report <span>JSON</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- SUMMARY CARDS -->
+      <div class="stats-grid">
+
+        <div class="stat-card total-stat">
+          <div class="stat-label">TOTAL CHANGES</div>
+          <div class="stat-number">
+            {{ changes.length }}
+            <span>detected</span>
+          </div>
+          <div class="stat-foot">Across all JSON paths</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-bullet added-bullet"></span>
+            ADDED
+          </div>
+          <div class="stat-number">{{ addedCount }}</div>
+          <div class="stat-foot">New properties / items</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-bullet removed-bullet"></span>
+            REMOVED
+          </div>
+          <div class="stat-number">{{ removedCount }}</div>
+          <div class="stat-foot">Deleted properties / items</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-bullet modified-bullet"></span>
+            MODIFIED
+          </div>
+          <div class="stat-number">{{ modifiedCount }}</div>
+          <div class="stat-foot">Values or data types changed</div>
+        </div>
+
+      </div>
+
+      <!-- ANALYSIS PANEL -->
+      <div class="analysis-panel">
+
+        <div class="panel-toolbar">
+
+          <div class="tabs">
+            <button
+              [class.active]="activeTab === 'changes'"
+              (click)="activeTab = 'changes'">
+              ✳ Change explanations
+              <span>{{ changes.length }}</span>
+            </button>
+
+            <button
+              [class.active]="activeTab === 'lines'"
+              (click)="activeTab = 'lines'">
+              ☷ Line-by-line diff
+              <span>{{ visibleLineDiffs.length }}</span>
+            </button>
+          </div>
+
+          <div class="panel-tools">
+
+            <label class="search-box">
+              ⌕
+              <input
+                [(ngModel)]="searchTerm"
+                placeholder="Search paths or changes...">
+            </label>
+
+            <select
+              class="change-filter"
+              [(ngModel)]="changeFilter">
+
+              <option value="all">All changes</option>
+              <option value="added">Added</option>
+              <option value="removed">Removed</option>
+              <option value="modified">Modified</option>
+
+            </select>
+
+            <label class="toggle-label">
+              <input
+                type="checkbox"
+                [(ngModel)]="showUnchanged">
+              Show unchanged
+            </label>
+
+          </div>
+        </div>
+
+        <!-- CHANGE EXPLANATIONS TAB -->
+        <div class="change-list" *ngIf="activeTab === 'changes'">
+
+       <div class="change-list-head">
+  <span>S.NO.</span>
+  <span>ORIGINAL LINE</span>
+  <span>UPDATED LINE</span>
+  <span>JSON ROOT PATH</span>
+  <span>CHANGE EXPLANATION</span>
+  <span>TYPE</span>
+</div>
+
+<div
+  class="change-row"
+  *ngFor="let change of filteredChanges; trackBy: trackByChange">
+
+  <div class="serial-cell">
+    {{ change.sno }}
+  </div>
+
+  <div class="line-number-cell">
+    {{ change.oldLineNumber ?? '—' }}
+  </div>
+
+  <div class="line-number-cell">
+    {{ change.newLineNumber ?? '—' }}
+  </div>
+
+  <div class="path-cell">
+    <code>{{ change.path }}</code>
+  </div>
+
+  <div class="explanation-cell">
+    <div class="explanation-text">
+      {{ change.explanation }}
+    </div>
+
+    <div class="value-pair">
+      <span class="old-value" *ngIf="change.type !== 'added'">
+        {{ change.oldValue === undefined ? 'undefined' : (change.oldValue | json) }}
+      </span>
+
+      <span class="value-arrow" *ngIf="change.type === 'modified'">→</span>
+
+      <span class="new-value" *ngIf="change.type !== 'removed'">
+        {{ change.newValue | json }}
+      </span>
+
+      <span class="muted-value" *ngIf="change.type === 'removed'">
+        Removed
+      </span>
+    </div>
+  </div>
+
+  <div>
+    <span class="type-pill" [ngClass]="change.type">
+      {{ change.type }}
+    </span>
+  </div>
+
+</div>
+
+<div class="empty-state" *ngIf="filteredChanges.length === 0">
+            {{ changes.length === 0
+              ? 'No JSON data changes found. The parsed values are identical.'
+              : 'No changes match your search.' }}
+          </div>
+
+          <div class="list-footer" *ngIf="filteredChanges.length">
+            <span>
+              Showing {{ filteredChanges.length }} change records
+            </span>
+
+            <div>
+              <button (click)="nextChange(-1)">← Previous</button>
+              <button (click)="nextChange(1)">Next →</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- LINE-BY-LINE DIFF TAB -->
+        <div class="line-list" *ngIf="activeTab === 'lines'">
+
+          <div class="line-tools">
+
+            <label class="search-box">
+              ⌕
+              <input
+                [(ngModel)]="lineSearchTerm"
+                placeholder="Search changed lines or explanations...">
+            </label>
+
+            <span>{{ visibleLineDiffs.length }} visible rows</span>
+
+          </div>
+
+          <div class="line-list-head">
+            <span>ORIGINAL · {{ originalName }}</span>
+            <span>UPDATED · {{ compareName }}</span>
+            <span>STATUS / EXPLANATION</span>
+          </div>
+
+          <div
+            class="line-row"
+            *ngFor="let row of visibleLineDiffs"
+            [ngClass]="row.type">
+
+            <div class="line-code">
+              <span class="line-number">
+                {{ row.oldLineNumber || '·' }}
+              </span>
+              <code>{{ row.oldText || ' ' }}</code>
+            </div>
+
+            <div class="line-code">
+              <span class="line-number">
+                {{ row.newLineNumber || '·' }}
+              </span>
+              <code>{{ row.newText || ' ' }}</code>
+            </div>
+
+            <div class="line-detail">
+
+              <span class="line-status">
+                {{ row.type }}
+              </span>
+
+              <code *ngIf="row.path">
+                {{ row.path }}
+              </code>
+
+              <small>
+                {{ row.explanation || 'Unchanged line.' }}
+              </small>
+
+            </div>
+
+          </div>
+
+          <div class="empty-state" *ngIf="visibleLineDiffs.length === 0">
+            No line differences found.
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="footnote">
+        <span>ⓘ</span>
+        JSON path analysis compares parsed data; line diff compares the exact text layout.
+        Reordered object keys may appear in line diff but are not treated as data changes.
+      </div>
+
+    </section>
+
+    <!-- INITIAL STATE -->
+    <section class="empty-results" *ngIf="!compared">
+
+      <div class="empty-symbol">⇄</div>
+
+      <h3>Ready when you are</h3>
+
+      <p>
+        Load two files or edit the sample JSON, then select
+        <b>Compare Files</b> to inspect every difference.
+      </p>
+
+      <button class="text-button" (click)="loadDemo()">
+        Run comparison with sample data →
+      </button>
+
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="app-footer">
+      <div class="footer-brand">
+        <strong>JSON DIFF ANALYZER PRO</strong>
+        <span>Advanced Developer Utility</span>
+      </div>
+
+      <div class="footer-developer">
+        <span>DESIGNED &amp; DEVELOPED BY</span>
+        <strong>Vikash Dubey</strong>
+        <small>Software Developer</small>
+      </div>
+
+      <div class="footer-copyright">
+        <span>VERSION 1.2</span>
+        <span>© 2026 Vikash Dubey. All Rights Reserved.</span>
+        <small>Built with precision. Designed for developers.</small>
+      </div>
+    </footer>
+
+  </main>
+</div>
